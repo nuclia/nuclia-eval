@@ -1,0 +1,56 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+includes = [
+    "src/nuclia_eval/py.typed"
+]
+source = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["./tests"]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["nuclia_eval"]
+
+[pytest]
+log_cli=true
+
+[project]
+name = "nuclia_eval"
+version = "0.0.1"
+authors = [
+    { name="Carmen Iniesta", email="carmen@nuclia.com" },
+    { name="Ramon Navarro", email="ramon@nuclia.com" },
+    { name="Carles Onielfa", email="carlesop@nuclia.com" },
+]
+description = "Library for evaluating RAG using Nuclia's models"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "huggingface-hub>=0.23.4",
+    "mistral-common>=1.2.1",
+    "mistral-inference>=1.1.0",
+    "pydantic>=2.6.1",
+    "pydantic-settings>=2.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff"
+]
+
+[project.urls]
+Homepage = "https://github.com/nuclia/nuclia-eval"
+Issues = "https://github.com/nuclia/nuclia-eval/issues"
