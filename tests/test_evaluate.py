@@ -21,49 +21,49 @@ def test_REMi_evaluator():
     t0 = monotonic()
     evaluator = REMiEvaluator()
     t1 = monotonic()
-    data_path = "/home/learning/oni/llms/rag_metrics_llm/data/miniset.json"
+    data_path = "/home/learning/oni/llms/rag_metrics_llm/data/miniset_results.json"
     with open(data_path) as f:
         data = json.load(f)
     answer_relevance_MAES = []
     groundedness_MAES = []
     context_relevance_MAES = []
-
+    version = "v0.2"
     for d in data:
-        answ_rel, ctx_rel_grd_responses = evaluator.evaluate_rag(
-            d["question"], d["answer"], d["contexts"]
+        answ_rel = evaluator.answer_relevance(d["question"], d["answer"])
+        ctx_rel_responses = evaluator.context_relevance(d["question"], d["contexts"])
+        groundedness_responses = evaluator.groundedness(d["answer"], d["contexts"])
+
+        d["answer_relevance_score_" + version] = answ_rel.score
+        d["groundedness_scores_" + version] = [
+            ctx_rel_grd.score for ctx_rel_grd in groundedness_responses
+        ]
+        d["context_relevance_scores_" + version] = [
+            ctx_rel_grd.score for ctx_rel_grd in ctx_rel_responses
+        ]
+
+        d["answer_relevance_MAE_" + version] = abs(
+            d["answer_relevance_score_" + version] - d["answer_relevance_score"]
         )
 
-        d["answer_relevance_score_v0.1"] = answ_rel.score
-        d["groundedness_scores_v0.1"] = [
-            ctx_rel_grd.groundedness_score for ctx_rel_grd in ctx_rel_grd_responses
-        ]
-        d["context_relevance_scores_v0.1"] = [
-            ctx_rel_grd.context_relevance_score for ctx_rel_grd in ctx_rel_grd_responses
-        ]
-
-        d["answer_relevance_MAE_v0.1"] = abs(
-            d["answer_relevance_score_v0.1"] - d["answer_relevance_score"]
-        )
-
-        d["groundedness_MAE_v0.1"] = sum(
+        d["groundedness_MAE_" + version] = sum(
             abs(desired - generated)
             for generated, desired in zip(
-                d["groundedness_scores_v0.1"], d["groundedness_scores"]
+                d["groundedness_scores_" + version], d["groundedness_scores"]
             )
         )
-        d["groundedness_MAE_v0.1"] /= len(d["groundedness_scores"])
+        d["groundedness_MAE_" + version] /= len(d["groundedness_scores"])
 
-        d["context_relevance_MAE_v0.1"] = sum(
+        d["context_relevance_MAE_" + version] = sum(
             abs(desired - generated)
             for generated, desired in zip(
-                d["context_relevance_scores_v0.1"], d["context_relevance_scores"]
+                d["context_relevance_scores_" + version], d["context_relevance_scores"]
             )
         )
-        d["context_relevance_MAE_v0.1"] /= len(d["context_relevance_scores"])
+        d["context_relevance_MAE_" + version] /= len(d["context_relevance_scores"])
 
-        answer_relevance_MAES.append(d["answer_relevance_MAE_v0.1"])
-        groundedness_MAES.append(d["groundedness_MAE_v0.1"])
-        context_relevance_MAES.append(d["context_relevance_MAE_v0.1"])
+        answer_relevance_MAES.append(d["answer_relevance_MAE_" + version])
+        groundedness_MAES.append(d["groundedness_MAE_" + version])
+        context_relevance_MAES.append(d["context_relevance_MAE_" + version])
 
     print(
         f"Answer Relevance MAE: {sum(answer_relevance_MAES) / len(answer_relevance_MAES)}"
@@ -82,18 +82,6 @@ def test_REMi_evaluator():
     import pdb
 
     pdb.set_trace()
-    # out = evaluator.groundedness_ctx_relevance(
-    #     "What is the Hubble Space Telescope?",
-    #     "The Hubble Space Telescope (HST) is a space-based observatory that was launched into low Earth orbit by the Space Shuttle Discovery on April 24, 1990. Named after the astronomer Edwin Hubble, it is a project of international cooperation between NASA and the European Space Agency (ESA). The Hubble Space Telescope has made numerous significant contributions to astronomy and cosmology, thanks to its ability to capture high-resolution images and conduct observations without the distortion caused by the Earth's atmosphere.",
-    #     ["The Hubble Space Telescope is a space telescope that was launched into low Earth orbit in 1990 and remains in operation."]
-    # )
-    out = evaluator.groundedness_ctx_relevance(
-        "What are the specs of the OP-1 display?",
-        "The specs of the OP-1 display are:\n\n- AMOLED display running at 60 fps\n- 320 x 160 pixel resolution\n- Color Depth: 16.7 M\n- Contrast: 10000:1 (good for outdoor use)\n- Viewing Angle: 170°\n- Life Time: 30,000 h",
-        [
-            "Display\n\n• AMOLED display running at 60 fps • 320 x 160 pixel resolution • Color Depth: 16.7 M • Contrast: 10000:1 (good for outdoor\n\nuse)\n\n• Viewing Angle: 170° • Life Time: 30,000 h • 1800 mAh li-ion Polymer Battery"
-        ],
-    )
 
     """query = "What is the Hubble Space Telescope?"
     contexts = [
@@ -114,7 +102,7 @@ def test_REMi_evaluator():
     import pdb
 
     pdb.set_trace()
-    assert out.answer_relevance == 1.0
+    # assert out.answer_relevance == 1.0
 
 
 @patch("nuclia_eval.models.remi.snapshot_download")

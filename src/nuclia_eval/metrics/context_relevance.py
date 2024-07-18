@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from nuclia_eval.metrics.base import DiscreteScoreResponse, Metric
 
 CONTEXT_RELEVANCE_TEMPLATE = """\
 You are a RELEVANCE grader, tasked with providing relevance scores between a given QUESTION and the CONTEXT provided.
@@ -31,22 +31,21 @@ CONTEXT:
 
 CONTEXT RELEVANCE SCORE: """
 
-
-class ContextRelevanceResponse(BaseModel):
-    score: int = Field(
-        ge=0, le=5, description="The score of the metric, on a scale of 0 to 5"
-    )
-
-
-GROUNDEDNESS_TOOL = {
+CONTEXT_RELEVANCE_TOOL = {
     "type": "function",
     "function": {
         "name": "context_relevance",
         "description": "Is the retrieved context relevant to the question?",
         "parameters": {
             "type": "object",
-            "properties": ContextRelevanceResponse.model_json_schema()["properties"],
-            "required": ContextRelevanceResponse.model_json_schema()["required"],
+            "properties": DiscreteScoreResponse.model_json_schema()["properties"],
+            "required": DiscreteScoreResponse.model_json_schema()["required"],
         },
     },
 }
+
+ContextRelevance = Metric(
+    template=CONTEXT_RELEVANCE_TEMPLATE,
+    response_model=DiscreteScoreResponse,
+    tool=CONTEXT_RELEVANCE_TOOL,
+)

@@ -18,24 +18,23 @@ from pydantic import BaseModel, ValidationError
 
 from nuclia_eval import logger
 from nuclia_eval.exceptions import InvalidToolCallException, NoOutputException
-from nuclia_eval.models.base import Evaluator
-from nuclia_eval.settings import Settings
-from nuclia_eval.templates.answer_relevance import (
-    ANSWER_RELEVANCE_TEMPLATE,
-    ANSWER_RELEVANCE_TOOL,
+from nuclia_eval.metrics import (
+    AnswerRelevance,
     AnswerRelevanceResponse,
+    ContextRelevance,
+    ContextRelevanceResponse,
+    Groundedness,
+    GroundednessResponse,
 )
-from nuclia_eval.templates.groundedness_ctx_relevance import (
-    GROUNDEDNESS_CTX_RELEVANCE_TEMPLATE,
-    GROUNDEDNESS_CTX_RELEVANCE_TOOL,
-    GroundednessCtxRelevanceResponse,
-)
+from nuclia_eval.metrics.base import Metric
+from nuclia_eval.models.base import RAGEvaluator
+from nuclia_eval.settings import Settings
 from nuclia_eval.utils import load_lora_low_mem
 
 T = TypeVar("T", bound=BaseModel)
 
 
-class REMiEvaluator(Evaluator):
+class REMiEvaluator(RAGEvaluator):
     def __init__(
         self,
         settings: Optional[Settings] = None,
@@ -123,47 +122,93 @@ class REMiEvaluator(Evaluator):
 
     def evaluate_rag(
         self, query: str, answer: str, contexts: list[str]
-    ) -> Tuple[AnswerRelevanceResponse, list[GroundednessCtxRelevanceResponse]]:
+    ) -> Tuple[
+        AnswerRelevanceResponse,
+        list[ContextRelevanceResponse],
+        list[GroundednessResponse],
+    ]:
         # Answer relevance
         answer_relevance = self.answer_relevance(query, answer)
-        # Groundedness and context relevance
-        groundedness_ctx_relevances = self.groundedness_ctx_relevance(
-            query, answer, contexts
-        )
-        return answer_relevance, groundedness_ctx_relevances
+        # Context relevance
+        context_relevance = self.context_relevance(query, contexts)
+        # Groundedness
+        groundedness = self.groundedness(answer, contexts)
+        return answer_relevance, context_relevance, groundedness
 
     def answer_relevance(self, query: str, answer: str) -> AnswerRelevanceResponse:
         system_message = self._get_system_message()
-        answer_relevance_message = self._get_answer_relevance_message(query, answer)
+        answer_relevance_message = self._get_metric_message(
+            AnswerRelevance, query=query, answer=answer
+        )
         response = self._chat_completion_request(
             [system_message, answer_relevance_message],
+            [Tool.model_validate(AnswerRelevance.tool)],
             AnswerRelevanceResponse,  # type: ignore
         )
         return response
 
-    def groundedness_ctx_relevance(
-        self, query: str, answer: str, contexts: list[str]
-    ) -> list[GroundednessCtxRelevanceResponse]:
+    # def groundedness_ctx_relevance(
+    #     self, query: str, answer: str, contexts: list[str]
+    # ) -> list[GroundednessCtxRelevanceResponse]:
+    #     system_message = self._get_system_message()
+    #     groundedness_ctx_rel_messages = self._get_groundedness_ctx_rel_messages(
+    #         query, answer, contexts
+    #     )
+    #     responses = []
+    #     for message in groundedness_ctx_rel_messages:
+    #         responses.append(
+    #             self._chat_completion_request(
+    #                 [system_message, message],
+    #                 [Tool.model_validate(GROUNDEDNESS_CTX_RELEVANCE_TOOL)],
+    #                 GroundednessCtxRelevanceResponse,  # type: ignore
+    #             )
+    #         )
+    #     return responses
+
+    def groundedness(
+        self, answer: str, contexts: list[str]
+    ) -> list[GroundednessResponse]:
         system_message = self._get_system_message()
-        groundedness_ctx_rel_messages = self._get_groundedness_ctx_rel_messages(
-            query, answer, contexts
-        )
+        groundedness_messages = [
+            self._get_metric_message(Groundedness, answer=answer, context=context)
+            for context in contexts
+        ]
         responses = []
-        for message in groundedness_ctx_rel_messages:
+        for message in groundedness_messages:
             responses.append(
                 self._chat_completion_request(
                     [system_message, message],
-                    GroundednessCtxRelevanceResponse,  # type: ignore
+                    [Tool.model_validate(Groundedness.tool)],
+                    GroundednessResponse,  # type: ignore
+                )
+            )
+        return responses
+
+    def context_relevance(
+        self, query: str, contexts: list[str]
+    ) -> list[ContextRelevanceResponse]:
+        system_message = self._get_system_message()
+        context_relevance_messages = [
+            self._get_metric_message(ContextRelevance, query=query, context=context)
+            for context in contexts
+        ]
+        responses = []
+        for message in context_relevance_messages:
+            responses.append(
+                self._chat_completion_request(
+                    [system_message, message],
+                    [Tool.model_validate(ContextRelevance.tool)],
+                    ContextRelevanceResponse,  # type: ignore
                 )
             )
         return responses
 
     def _chat_completion_request(
-        self, messages: list[ChatMessageType], target_model: Type[T]
+        self, messages: list[ChatMessageType], tools: list[Tool], target_model: Type[T]
     ) -> T:
         request = ChatCompletionRequest(
             messages=messages,
-            tools=self._get_tools(),
+            tools=tools,
             tool_choice=ToolChoice.any,  # type: ignore
         )
         tokens = self.tokenizer.encode_chat_completion(request).tokens
@@ -180,7 +225,7 @@ class REMiEvaluator(Evaluator):
     def _validate_generation(
         self, out_tokens: list[list[int]], target_model: Type[T]
     ) -> T:
-        if not out_tokens:
+        if not out_tokens or not out_tokens[0]:
             raise NoOutputException("No output generated")
         # First token must be token call
         if out_tokens[0][0] != 5:
@@ -195,14 +240,6 @@ class REMiEvaluator(Evaluator):
             raise InvalidToolCallException("Could not parse response")
         return model
 
-    def _get_tools(self) -> list[Tool]:
-        if self._tools is None:
-            self._tools = [
-                Tool.model_validate(tool)
-                for tool in [ANSWER_RELEVANCE_TOOL, GROUNDEDNESS_CTX_RELEVANCE_TOOL]
-            ]
-        return self._tools
-
     def _get_system_message(self) -> SystemMessage:
         if self._system_message is None:
             self._system_message = SystemMessage(
@@ -210,19 +247,19 @@ class REMiEvaluator(Evaluator):
             )
         return self._system_message
 
-    def _get_answer_relevance_message(self, query: str, answer: str) -> UserMessage:
+    def _get_metric_message(self, metric: Metric, **template_fields) -> UserMessage:
         return UserMessage(
-            content=ANSWER_RELEVANCE_TEMPLATE.format(query=query, answer=answer),
+            content=metric.template.format(**template_fields),
         )
 
-    def _get_groundedness_ctx_rel_messages(
-        self, query: str, answer: str, contexts: list[str]
-    ) -> list[UserMessage]:
-        return [
-            UserMessage(
-                content=GROUNDEDNESS_CTX_RELEVANCE_TEMPLATE.format(
-                    query=query, answer=answer, context=context
-                ),
-            )
-            for context in contexts
-        ]
+    # def _get_groundedness_ctx_rel_messages(
+    #     self, query: str, answer: str, contexts: list[str]
+    # ) -> list[UserMessage]:
+    #     return [
+    #         UserMessage(
+    #             content=GROUNDEDNESS_CTX_RELEVANCE_TEMPLATE.format(
+    #                 query=query, answer=answer, context=context
+    #             ),
+    #         )
+    #         for context in contexts
+    #     ]

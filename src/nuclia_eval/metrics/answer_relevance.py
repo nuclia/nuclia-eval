@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from nuclia_eval.metrics.base import DiscreteScoreReasonResponse, Metric
+
 ANSWER_RELEVANCE_TEMPLATE = """You are a RELEVANCE grader, tasked with assessing the relevance of a given RESPONSE to a given QUERY and providing a score along with a brief REASON. Relevance refers to the directness and appropriateness of the response in addressing the specific question asked, providing accurate, complete, and contextually suitable information.
 
 Respond by reporting the answer relevance metric with the provided function
@@ -24,16 +26,6 @@ RESPONSE: {answer}
 
 ANSWER RELEVANCE: """
 
-
-class AnswerRelevanceResponse(BaseModel):
-    score: int = Field(
-        ge=0, le=5, description="The score of the metric, on a scale of 0 to 5"
-    )
-    reason: str = Field(
-        description="The reason for the score, limited to 150 characters"
-    )
-
-
 ANSWER_RELEVANCE_TOOL = {
     "type": "function",
     "function": {
@@ -41,8 +33,14 @@ ANSWER_RELEVANCE_TOOL = {
         "description": "The relevance of an answer is its directness and appropriateness in addressing the specific question asked, providing accurate, complete, and contextually suitable information. It ensures clarity and specificity, avoiding extraneous details while fully satisfying the inquiry.",
         "parameters": {
             "type": "object",
-            "properties": AnswerRelevanceResponse.model_json_schema()["properties"],
-            "required": AnswerRelevanceResponse.model_json_schema()["required"],
+            "properties": DiscreteScoreReasonResponse.model_json_schema()["properties"],
+            "required": DiscreteScoreReasonResponse.model_json_schema()["required"],
         },
     },
 }
+
+AnswerRelevance = Metric(
+    template=ANSWER_RELEVANCE_TEMPLATE,
+    response_model=DiscreteScoreReasonResponse,
+    tool=ANSWER_RELEVANCE_TOOL,
+)

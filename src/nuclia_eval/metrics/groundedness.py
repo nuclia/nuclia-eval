@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from nuclia_eval.metrics.base import DiscreteScoreResponse, Metric
 
 GROUNDEDNESS_TEMPLATE = """\
 You are an INFORMATION OVERLAP classifier. Your task is to determine the extent of overlap between the information in the STATEMENT and the SOURCE.
@@ -33,13 +33,6 @@ SOURCE:
 
 GROUNDEDNESS SCORE: """
 
-
-class GroundednessResponse(BaseModel):
-    score: int = Field(
-        ge=0, le=5, description="The score of the metric, on a scale of 0 to 5"
-    )
-
-
 GROUNDEDNESS_TOOL = {
     "type": "function",
     "function": {
@@ -47,8 +40,14 @@ GROUNDEDNESS_TOOL = {
         "description": "Is the answer grounded in any of the provided contexts?",
         "parameters": {
             "type": "object",
-            "properties": GroundednessResponse.model_json_schema()["properties"],
-            "required": GroundednessResponse.model_json_schema()["required"],
+            "properties": DiscreteScoreResponse.model_json_schema()["properties"],
+            "required": DiscreteScoreResponse.model_json_schema()["required"],
         },
     },
 }
+
+Groundedness = Metric(
+    template=GROUNDEDNESS_TEMPLATE,
+    response_model=DiscreteScoreResponse,
+    tool=GROUNDEDNESS_TOOL,
+)
