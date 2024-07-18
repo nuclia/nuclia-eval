@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+        - 'src/**'
+        - 'tests/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+        - 'src/**'
+        - 'tests/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+    test:
+      name: "Test"
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.9'
+        - name: Install dependencies
+          run: make install
+        - name: Run pre-checks
+          run: make lint
+        - name: Run tests
+          run: make test
+        - name: Get coverage
+          uses: orgoro/coverage@v3.1
+          if: github.event_name == 'pull_request'
+          with:
+              coverageFile: coverage.xml
+              token: ${{ secrets.GITHUB_TOKEN }}
+              thresholdAll: 0.9
+
+

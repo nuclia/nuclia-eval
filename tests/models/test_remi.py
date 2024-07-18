@@ -1,11 +1,12 @@
 import json
 import os
-from pathlib import Path
+import shutil
 from time import monotonic
 from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 
+from nuclia_eval.exceptions import InvalidToolCallException
 from nuclia_eval.models.remi import REMiEvaluator
 from nuclia_eval.settings import Settings
 
@@ -105,20 +106,30 @@ def test_REMi_evaluator():
     # assert out.answer_relevance == 1.0
 
 
+@patch("nuclia_eval.models.remi.generate")
 @patch("nuclia_eval.models.remi.snapshot_download")
 @patch("nuclia_eval.models.remi.load_lora_low_mem")
 @patch("nuclia_eval.models.remi.Transformer")
 @patch("nuclia_eval.models.remi.MistralTokenizer")
 def test_REMi_evaluator_mock(
-    tokenizer_mock, transformer_mock, lora_load_mock, snapshot_download_mock
+    tokenizer_mock: MagicMock,
+    transformer_mock: MagicMock,
+    lora_load_mock: MagicMock,
+    snapshot_download_mock: MagicMock,
+    generate_mock: MagicMock,
 ):
     # Setup mocks
-    snapshot_download_mock.return_value = None
+    snapshot_download_mock.side_effect = lambda local_dir, *args, **kwargs: os.makedirs(
+        local_dir, exist_ok=True
+    )
     lora_load_mock.return_value = None
     fake_tokenizer = MagicMock()
     tokenizer_mock.from_file.return_value = fake_tokenizer
     fake_model = MagicMock()
     transformer_mock.from_folder.return_value = fake_model
+    # Delete the cache folder
+    if os.path.exists("my_cache/"):
+        shutil.rmtree("my_cache/")
 
     # Create custom settings
     settings = Settings(
@@ -133,16 +144,75 @@ def test_REMi_evaluator_mock(
     assert evaluator._adapter_model_path.match(settings.nuclia_model_cache + "*")
 
     # Check mock calls
-    # 2 Download should have been made, one for the base model and one for the adapter model
-    import pdb
+    # 2 Downloads should have been made, one for the base model and one for the adapter model
+    snapshot_download_mock.assert_has_calls(
+        [
+            call(
+                repo_id="mistralai/Mistral-7B-Instruct-v0.3",
+                allow_patterns=ANY,
+                local_dir=evaluator._base_model_path,
+            ),
+            call(
+                repo_id="nuclia/REMi-v0",
+                local_dir=evaluator._adapter_model_path,
+            ),
+        ],
+        any_order=True,
+    )
+    # Check that the tokenizer was loaded
+    tokenizer_mock.from_file.assert_called_once()
+    # Check that the model was loaded
+    transformer_mock.from_folder.assert_called_once()
+    # Check that Lora was loaded
+    lora_load_mock.assert_called_once()
+    # Check that the model was moved to the device
+    fake_model.to.assert_called_once_with("my_device")
 
-    pdb.set_trace()
-    snapshot_download_mock.assert_called_with(
-        repo_id="mistralai/Mistral-7B-Instruct-v0.3",
-        allow_patterns=ANY,
-        local_dir=evaluator._base_model_path,
+    # Now load one with default settings
+    evaluator = REMiEvaluator()
+
+    # Configure mocks for a rag_evaluation call
+    tokenizer_mock.encode_chat_completion.return_value = [1, 2, 3]
+    generate_mock.return_value = ([[5, 123, 123]], [[0.1, 0.2, 0.3]])
+    fake_tokenizer.instruct_tokenizer.tokenizer.decode.side_effect = [
+        # Answer relevance
+        '[{"name": "answer_relevance", "arguments": {"reason": "fake", "score": 1}}]',
+        # Context relevances
+        '[{"name": "context_relevance", "arguments": {"score": 2}}]',
+        '[{"name": "context_relevance", "arguments": {"score": 3}}]',
+        # Groundedness
+        '[{"name": "groundedness", "arguments": {"score": 4}}]',
+        '[{"name": "groundedness", "arguments": {"score": 5}}]',
+    ]
+
+    # Run evaluation
+    answer_relevance, context_relevances, groundednesses = evaluator.evaluate_rag(
+        "query", "answer", ["context1", "context2"]
     )
-    snapshot_download_mock.assert_called_with(
-        repo_id="nuclia/REMi-v0",
-        local_dir=evaluator._adapter_model_path,
-    )
+    assert answer_relevance.score == 1 and answer_relevance.reason == "fake"
+    assert [cr.score for cr in context_relevances] == [2, 3]
+    assert [g.score for g in groundednesses] == [4, 5]
+
+    # Create another evaluator, so that we can check that the model is not downloaded again
+    evaluator = REMiEvaluator(settings=settings, device="my_device")
+    # Check that the download calls were not made again
+    assert len(snapshot_download_mock.mock_calls) == 2
+
+    # Check that we raise an error if we don't get a tool call
+    generate_mock.return_value = ([[123, 123]], [[0.2, 0.3]])
+    with pytest.raises(InvalidToolCallException):
+        evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
+
+    # Check that we raise an error if the tool call generated is invalid
+    generate_mock.return_value = ([[5, 123, 123]], [[0.1, 0.2, 0.3]])
+    fake_tokenizer.instruct_tokenizer.tokenizer.decode.side_effect = [
+        # Answer relevance with a parameter naming error
+        '[{"name": "answer_relevance", "arguments": {"reasoning": "fake", "score": 1}}]',
+    ]
+    with pytest.raises(InvalidToolCallException):
+        evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
+
+    # Check that we raise an error if no output is generated
+    generate_mock.return_value = ([], [])
+    with pytest.raises(InvalidToolCallException):
+        evaluator.evaluate_rag("query", "answer", ["context1", "context2"])

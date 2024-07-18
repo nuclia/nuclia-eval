@@ -1,14 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-from nuclia_eval.metrics import (
-    AnswerRelevance,
-    AnswerRelevanceResponse,
-    ContextRelevance,
-    ContextRelevanceResponse,
-    Groundedness,
-    GroundednessResponse,
-)
+from nuclia_eval.metrics.base import DiscreteScoreReasonResponse, DiscreteScoreResponse
 
 
 class RAGEvaluator(ABC):
@@ -16,9 +9,9 @@ class RAGEvaluator(ABC):
     def evaluate_rag(
         self, query: str, answer: str, contexts: list[str]
     ) -> Tuple[
-        AnswerRelevanceResponse,
-        list[ContextRelevanceResponse],
-        list[GroundednessResponse],
+        DiscreteScoreReasonResponse,
+        list[DiscreteScoreResponse],
+        list[DiscreteScoreResponse],
     ]: ...
 
     @abstractmethod
@@ -26,7 +19,7 @@ class RAGEvaluator(ABC):
         self,
         query: str,
         answer: str,
-    ) -> AnswerRelevanceResponse: ...
+    ) -> DiscreteScoreReasonResponse: ...
 
     # @abstractmethod
     # def groundedness_ctx_relevance(
@@ -36,9 +29,9 @@ class RAGEvaluator(ABC):
     @abstractmethod
     def context_relevance(
         self, query: str, contexts: list[str]
-    ) -> list[ContextRelevanceResponse]: ...
+    ) -> list[DiscreteScoreResponse]: ...
 
     @abstractmethod
     def groundedness(
         self, answer: str, contexts: list[str]
-    ) -> list[GroundednessResponse]: ...
+    ) -> list[DiscreteScoreResponse]: ...

@@ -7,7 +7,7 @@ from torch import nn
 
 def load_lora_low_mem(
     model: nn.Module, lora_path: Union[Path, str], scaling: float = 2.0
-):
+):  # pragma: no cover
     """Loads LoRA checkpoint with a low memory footprint compared to the official implementation"""
     lora_path = Path(lora_path)
     assert lora_path.is_file(), f"{lora_path} does not exist or is not a file"

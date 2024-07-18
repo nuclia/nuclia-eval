@@ -1,5 +1,3 @@
-from pydantic import BaseModel, Field
-
 from nuclia_eval.metrics.base import DiscreteScoreReasonResponse, Metric
 
 ANSWER_RELEVANCE_TEMPLATE = """You are a RELEVANCE grader, tasked with assessing the relevance of a given RESPONSE to a given QUERY and providing a score along with a brief REASON. Relevance refers to the directness and appropriateness of the response in addressing the specific question asked, providing accurate, complete, and contextually suitable information.

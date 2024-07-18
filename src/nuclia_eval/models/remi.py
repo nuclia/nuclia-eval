@@ -17,16 +17,17 @@ from mistral_inference.model import Transformer
 from pydantic import BaseModel, ValidationError
 
 from nuclia_eval import logger
-from nuclia_eval.exceptions import InvalidToolCallException, NoOutputException
+from nuclia_eval.exceptions import InvalidToolCallException
 from nuclia_eval.metrics import (
     AnswerRelevance,
-    AnswerRelevanceResponse,
     ContextRelevance,
-    ContextRelevanceResponse,
     Groundedness,
-    GroundednessResponse,
 )
-from nuclia_eval.metrics.base import Metric
+from nuclia_eval.metrics.base import (
+    DiscreteScoreReasonResponse,
+    DiscreteScoreResponse,
+    Metric,
+)
 from nuclia_eval.models.base import RAGEvaluator
 from nuclia_eval.settings import Settings
 from nuclia_eval.utils import load_lora_low_mem
@@ -123,9 +124,9 @@ class REMiEvaluator(RAGEvaluator):
     def evaluate_rag(
         self, query: str, answer: str, contexts: list[str]
     ) -> Tuple[
-        AnswerRelevanceResponse,
-        list[ContextRelevanceResponse],
-        list[GroundednessResponse],
+        DiscreteScoreReasonResponse,
+        list[DiscreteScoreResponse],
+        list[DiscreteScoreResponse],
     ]:
         # Answer relevance
         answer_relevance = self.answer_relevance(query, answer)
@@ -135,7 +136,7 @@ class REMiEvaluator(RAGEvaluator):
         groundedness = self.groundedness(answer, contexts)
         return answer_relevance, context_relevance, groundedness
 
-    def answer_relevance(self, query: str, answer: str) -> AnswerRelevanceResponse:
+    def answer_relevance(self, query: str, answer: str) -> DiscreteScoreReasonResponse:
         system_message = self._get_system_message()
         answer_relevance_message = self._get_metric_message(
             AnswerRelevance, query=query, answer=answer
@@ -143,7 +144,7 @@ class REMiEvaluator(RAGEvaluator):
         response = self._chat_completion_request(
             [system_message, answer_relevance_message],
             [Tool.model_validate(AnswerRelevance.tool)],
-            AnswerRelevanceResponse,  # type: ignore
+            DiscreteScoreReasonResponse,  # type: ignore
         )
         return response
 
@@ -167,7 +168,7 @@ class REMiEvaluator(RAGEvaluator):
 
     def groundedness(
         self, answer: str, contexts: list[str]
-    ) -> list[GroundednessResponse]:
+    ) -> list[DiscreteScoreResponse]:
         system_message = self._get_system_message()
         groundedness_messages = [
             self._get_metric_message(Groundedness, answer=answer, context=context)
@@ -179,14 +180,14 @@ class REMiEvaluator(RAGEvaluator):
                 self._chat_completion_request(
                     [system_message, message],
                     [Tool.model_validate(Groundedness.tool)],
-                    GroundednessResponse,  # type: ignore
+                    DiscreteScoreResponse,  # type: ignore
                 )
             )
         return responses
 
     def context_relevance(
         self, query: str, contexts: list[str]
-    ) -> list[ContextRelevanceResponse]:
+    ) -> list[DiscreteScoreResponse]:
         system_message = self._get_system_message()
         context_relevance_messages = [
             self._get_metric_message(ContextRelevance, query=query, context=context)
@@ -198,7 +199,7 @@ class REMiEvaluator(RAGEvaluator):
                 self._chat_completion_request(
                     [system_message, message],
                     [Tool.model_validate(ContextRelevance.tool)],
-                    ContextRelevanceResponse,  # type: ignore
+                    DiscreteScoreResponse,  # type: ignore
                 )
             )
         return responses
@@ -226,7 +227,7 @@ class REMiEvaluator(RAGEvaluator):
         self, out_tokens: list[list[int]], target_model: Type[T]
     ) -> T:
         if not out_tokens or not out_tokens[0]:
-            raise NoOutputException("No output generated")
+            raise InvalidToolCallException("No output generated")
         # First token must be token call
         if out_tokens[0][0] != 5:
             raise InvalidToolCallException("First token is not a tool call")
@@ -235,6 +236,7 @@ class REMiEvaluator(RAGEvaluator):
         try:
             calls = json.loads(result)
             call = FunctionCall.model_validate(calls[0])
+            # TODO: check that function name matches the expected tool name
             model = target_model.model_validate_json(call.arguments)
         except (TypeError, ValueError, KeyError, ValidationError):
             raise InvalidToolCallException("Could not parse response")
