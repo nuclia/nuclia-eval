@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - nuclia-eval-v0 # Temporary branch to test the CI
     paths:
         - 'src/**'
         - 'tests/**'
