@@ -45,7 +45,8 @@ class REMiEvaluator(Evaluator):
         super().__init__()
         # Load default settings if not provided
         if settings is None:
-            self.settings = Settings()
+            settings = Settings()
+        self.settings = settings
 
         # Download models
         self._download_base_model(force_download)
@@ -58,13 +59,12 @@ class REMiEvaluator(Evaluator):
         )
         logger.info("Tokenizer loaded successfully")
 
-        # Load model on CPU always to avoid memory issues during adapter loading
+        # Load model
         logger.info("Loading base model")
         self.model = Transformer.from_folder(
             str(self._base_model_path),
-            dtype=torch.float16,  # device="cpu"
+            dtype=torch.float16,
         )
-        torch.cuda.empty_cache()
         logger.info("Base model loaded successfully")
 
         # Load LoRA
@@ -88,7 +88,7 @@ class REMiEvaluator(Evaluator):
         )
         if force_download or not self._base_model_path.exists():
             logger.info(
-                f"Downloading base model to {self._base_model_path}, to override this behavior, please provide the path in the settings or as an environment variable `NUCLIA_EVAL_MODEL_CACHE`"
+                f"Downloading base model to {self._base_model_path}, to override this behavior, please provide the path in the settings or as an environment variable `NUCLIA_MODEL_CACHE`"
             )
             snapshot_download(
                 repo_id="mistralai/Mistral-7B-Instruct-v0.3",
@@ -109,7 +109,7 @@ class REMiEvaluator(Evaluator):
         self._adapter_model_path = Path(self.settings.nuclia_model_cache) / "REMi-v0"
         if force_download or not self._adapter_model_path.exists():
             logger.info(
-                f"Downloading adapter model to {self._adapter_model_path}, to override this behavior, please provide the path in the settings or as an environment variable `NUCLIA_EVAL_MODEL_CACHE`"
+                f"Downloading adapter model to {self._adapter_model_path}, to override this behavior, please provide the path in the settings or as an environment variable `NUCLIA_MODEL_CACHE`"
             )
             snapshot_download(
                 repo_id="nuclia/REMi-v0",
