@@ -49,6 +49,7 @@ jobs:
             git config --global user.name 'github-actions[bot]'
             git config --global user.email 'github-actions[bot]@users.noreply.github.com'
             git clone --single-branch --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages
+            mkdir -p gh-pages/badges
             mv coverage-badge.svg gh-pages/badges/coverage.svg
             cd gh-pages
             git add badges/coverage.svg
