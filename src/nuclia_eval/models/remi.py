@@ -13,7 +13,7 @@ from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from mistral_common.protocol.instruct.tool_calls import FunctionCall, Tool, ToolChoice
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 from mistral_inference.generate import generate
-from mistral_inference.model import Transformer
+from mistral_inference.transformer import Transformer
 from pydantic import BaseModel, ValidationError
 
 from nuclia_eval import logger
