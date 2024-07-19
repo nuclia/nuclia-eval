@@ -1,5 +1,5 @@
 <!--- BADGES: START --->
-[![HF Nuclia](https://img.shields.io/badge/%F0%9F%A4%97-models-yellow)](https://huggingface.co/nuclia)
+[![HF Nuclia](https://img.shields.io/badge/%F0%9F%A4%97-nuclia_HF-yellow)](https://huggingface.co/nuclia)
 [![GitHub - License](https://img.shields.io/github/license/nuclia/nuclia-eval?logo=github&style=flat&color=green)][#github-license]
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/nuclia-eval?logo=pypi&style=flat&color=blue)][#pypi-package]
 [![PyPI - Package Version](https://img.shields.io/pypi/v/nuclia-eval?logo=pypi&style=flat&color=orange)][#pypi-package]
