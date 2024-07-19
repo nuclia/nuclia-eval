@@ -45,7 +45,7 @@ jobs:
           #if: github.ref == 'refs/heads/main'
           run: |
             pip install genbadge[coverage]
-            genbadge -i coverage.xml
+            genbadge coverage -i coverage.xml
             git config --global user.name 'github-actions[bot]'
             git config --global user.email 'github-actions[bot]@users.noreply.github.com'
             git clone --single-branch --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages
