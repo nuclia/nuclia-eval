@@ -64,8 +64,7 @@ class REMiEvaluator(RAGEvaluator):
         # Load model
         logger.info("Loading base model")
         self.model = Transformer.from_folder(
-            str(self._base_model_path),
-            dtype=torch.float16,
+            str(self._base_model_path), dtype=torch.float16, device=device
         )
         logger.info("Base model loaded successfully")
 
