@@ -146,7 +146,7 @@ class REMiEvaluator(RAGEvaluator):
         )
         response = self._chat_completion_request(
             [system_message, answer_relevance_message],
-            [Tool.model_validate(AnswerRelevance.tool)],
+            Tool.model_validate(AnswerRelevance.tool),
             DiscreteScoreReasonResponse,  # type: ignore
         )
         return response
@@ -165,7 +165,7 @@ class REMiEvaluator(RAGEvaluator):
             responses.append(
                 self._chat_completion_request(
                     [system_message, message],
-                    [Tool.model_validate(Groundedness.tool)],
+                    Tool.model_validate(Groundedness.tool),
                     DiscreteScoreResponse,  # type: ignore
                 )
             )
@@ -185,18 +185,18 @@ class REMiEvaluator(RAGEvaluator):
             responses.append(
                 self._chat_completion_request(
                     [system_message, message],
-                    [Tool.model_validate(ContextRelevance.tool)],
+                    Tool.model_validate(ContextRelevance.tool),
                     DiscreteScoreResponse,  # type: ignore
                 )
             )
         return responses
 
     def _chat_completion_request(
-        self, messages: list[ChatMessageType], tools: list[Tool], target_model: Type[T]
+        self, messages: list[ChatMessageType], tool: Tool, target_model: Type[T]
     ) -> T:
         request = ChatCompletionRequest(
             messages=messages,
-            tools=tools,
+            tools=[tool],
             tool_choice=ToolChoice.any,  # type: ignore
         )
         tokens = self.tokenizer.encode_chat_completion(request).tokens
@@ -207,11 +207,13 @@ class REMiEvaluator(RAGEvaluator):
             temperature=0.0,
             eos_id=self.tokenizer.instruct_tokenizer.tokenizer.eos_id,
         )
-        response = self._validate_generation(out_tokens, target_model)
+        response = self._validate_generation(
+            out_tokens, target_model, tool.function.name
+        )
         return response
 
     def _validate_generation(
-        self, out_tokens: list[list[int]], target_model: Type[T]
+        self, out_tokens: list[list[int]], target_model: Type[T], desired_tool_name: str
     ) -> T:
         if not out_tokens or not out_tokens[0]:
             raise InvalidToolCallException("No output generated")
@@ -223,7 +225,8 @@ class REMiEvaluator(RAGEvaluator):
         try:
             calls = json.loads(result)
             call = FunctionCall.model_validate(calls[0])
-            # TODO: check that function name matches the expected tool name
+            if call.name != desired_tool_name:
+                raise InvalidToolCallException("Unexpected tool call")
             model = target_model.model_validate_json(call.arguments)
         except (TypeError, ValueError, KeyError, ValidationError):
             raise InvalidToolCallException("Could not parse response")

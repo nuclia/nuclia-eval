@@ -4,7 +4,7 @@ from typing import Tuple
 from nuclia_eval.metrics.base import DiscreteScoreReasonResponse, DiscreteScoreResponse
 
 
-class RAGEvaluator(ABC):
+class RAGEvaluator(ABC): # pragma: no cover
     """Base class for all RAG evaluators"""
 
     @abstractmethod

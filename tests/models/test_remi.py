@@ -198,7 +198,7 @@ def test_REMi_evaluator_mock(
     # Check that the download calls were not made again
     assert len(snapshot_download_mock.mock_calls) == 2
 
-    # Check that we raise an error if we don't get a tool call
+    # Check that we raise an error if the first token is not a tool call token
     generate_mock.return_value = ([[123, 123]], [[0.2, 0.3]])
     with pytest.raises(InvalidToolCallException):
         evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
@@ -214,5 +214,14 @@ def test_REMi_evaluator_mock(
 
     # Check that we raise an error if no output is generated
     generate_mock.return_value = ([], [])
+    with pytest.raises(InvalidToolCallException):
+        evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
+
+    # Check that we raise an error if the tool name is not the expected one
+    generate_mock.return_value = ([[5, 123, 123]], [[0.1, 0.2, 0.3]])
+    fake_tokenizer.instruct_tokenizer.tokenizer.decode.side_effect = [
+        # Answer relevance but with a different name
+        '[{"name": "answer_rel", "arguments": {"reason": "fake", "score": 1}}]',
+    ]
     with pytest.raises(InvalidToolCallException):
         evaluator.evaluate_rag("query", "answer", ["context1", "context2"])

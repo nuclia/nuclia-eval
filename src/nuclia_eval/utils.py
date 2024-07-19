@@ -62,7 +62,7 @@ def load_lora_low_mem(
     model = model.to(device)
 
 
-def inherit_docstrings(cls):
+def inherit_docstrings(cls): # pragma: no cover
     for name, func in vars(cls).items():
         if not func.__doc__ and hasattr(getattr(cls, name), "__doc__"):
             func.__doc__ = getattr(cls, name).__doc__
