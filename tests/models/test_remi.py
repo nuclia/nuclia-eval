@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 from time import monotonic
 from unittest.mock import ANY, MagicMock, call, patch
 
@@ -119,17 +118,12 @@ def test_REMi_evaluator_mock(
     generate_mock: MagicMock,
 ):
     # Setup mocks
-    snapshot_download_mock.side_effect = lambda local_dir, *args, **kwargs: os.makedirs(
-        local_dir, exist_ok=True
-    )
+    snapshot_download_mock.return_value = None
     lora_load_mock.return_value = None
     fake_tokenizer = MagicMock()
     tokenizer_mock.from_file.return_value = fake_tokenizer
     fake_model = MagicMock()
     transformer_mock.from_folder.return_value = fake_model
-    # Delete the cache folder
-    if os.path.exists("my_cache/"):
-        shutil.rmtree("my_cache/")
 
     # Create custom settings
     settings = Settings(
@@ -194,7 +188,8 @@ def test_REMi_evaluator_mock(
     assert [g.score for g in groundednesses] == [4, 5]
 
     # Create another evaluator, so that we can check that the model is not downloaded again
-    evaluator = REMiEvaluator(settings=settings, device="my_device")
+    with patch("pathlib.Path.exists", return_value=True):
+        evaluator = REMiEvaluator(settings=settings, device="my_device")
     # Check that the download calls were not made again
     assert len(snapshot_download_mock.mock_calls) == 2
 
