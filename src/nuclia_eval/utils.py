@@ -60,3 +60,10 @@ def load_lora_low_mem(
     model.load_state_dict(state_dict, strict=True)
     # Move model back to desired device
     model = model.to(device)
+
+
+def inherit_docstrings(cls):
+    for name, func in vars(cls).items():
+        if not func.__doc__ and hasattr(getattr(cls, name), "__doc__"):
+            func.__doc__ = getattr(cls, name).__doc__
+    return cls

@@ -30,12 +30,14 @@ from nuclia_eval.metrics.base import (
 )
 from nuclia_eval.models.base import RAGEvaluator
 from nuclia_eval.settings import Settings
-from nuclia_eval.utils import load_lora_low_mem
+from nuclia_eval.utils import inherit_docstrings, load_lora_low_mem
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class REMiEvaluator(RAGEvaluator):
+    """Evaluator that uses a REMi model"""
+
     def __init__(
         self,
         settings: Optional[Settings] = None,
@@ -121,6 +123,7 @@ class REMiEvaluator(RAGEvaluator):
                 f"Adapter model already exists at {self._adapter_model_path}, skipping download"
             )
 
+    @inherit_docstrings
     def evaluate_rag(
         self, query: str, answer: str, contexts: list[str]
     ) -> Tuple[
@@ -148,24 +151,7 @@ class REMiEvaluator(RAGEvaluator):
         )
         return response
 
-    # def groundedness_ctx_relevance(
-    #     self, query: str, answer: str, contexts: list[str]
-    # ) -> list[GroundednessCtxRelevanceResponse]:
-    #     system_message = self._get_system_message()
-    #     groundedness_ctx_rel_messages = self._get_groundedness_ctx_rel_messages(
-    #         query, answer, contexts
-    #     )
-    #     responses = []
-    #     for message in groundedness_ctx_rel_messages:
-    #         responses.append(
-    #             self._chat_completion_request(
-    #                 [system_message, message],
-    #                 [Tool.model_validate(GROUNDEDNESS_CTX_RELEVANCE_TOOL)],
-    #                 GroundednessCtxRelevanceResponse,  # type: ignore
-    #             )
-    #         )
-    #     return responses
-
+    @inherit_docstrings
     def groundedness(
         self, answer: str, contexts: list[str]
     ) -> list[DiscreteScoreResponse]:
@@ -185,6 +171,7 @@ class REMiEvaluator(RAGEvaluator):
             )
         return responses
 
+    @inherit_docstrings
     def context_relevance(
         self, query: str, contexts: list[str]
     ) -> list[DiscreteScoreResponse]:
@@ -253,15 +240,3 @@ class REMiEvaluator(RAGEvaluator):
         return UserMessage(
             content=metric.template.format(**template_fields),
         )
-
-    # def _get_groundedness_ctx_rel_messages(
-    #     self, query: str, answer: str, contexts: list[str]
-    # ) -> list[UserMessage]:
-    #     return [
-    #         UserMessage(
-    #             content=GROUNDEDNESS_CTX_RELEVANCE_TEMPLATE.format(
-    #                 query=query, answer=answer, context=context
-    #             ),
-    #         )
-    #         for context in contexts
-    #     ]
