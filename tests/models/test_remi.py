@@ -1,4 +1,3 @@
-import json
 import os
 from time import monotonic
 from unittest.mock import ANY, MagicMock, call, patch
@@ -10,6 +9,7 @@ from nuclia_eval.models.remi import REMiEvaluator
 from nuclia_eval.settings import Settings
 
 MANUAL_TEST = os.getenv("MANUAL_TEST", False)
+
 
 @patch("nuclia_eval.models.remi.generate")
 @patch("nuclia_eval.models.remi.snapshot_download")
@@ -127,6 +127,7 @@ def test_REMi_evaluator_mock(
     with pytest.raises(InvalidToolCallException):
         evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
 
+
 @pytest.mark.skipif(
     not MANUAL_TEST,
     reason="This test requires a GPU and the downloaded models and is skipped by default.",
@@ -159,18 +160,22 @@ On the Oxygen Pro 49 and 61 the Preset button LED will be lit to show that Prese
     result = evaluator.evaluate_rag(query=query, answer=answer, contexts=contexts)
     answer_relevance, context_relevances, groundednesses = result
     t2 = monotonic()
-    print(f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}") # 4
-    print("Context relevances ", [cr.score for cr in context_relevances]) # [5, 1, 0]
-    print("Groundedness: ", [g.score for g in groundednesses]) # [2, 0, 0]
+    print(
+        f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}"
+    )  # 4
+    print("Context relevances ", [cr.score for cr in context_relevances])  # [5, 1, 0]
+    print("Groundedness: ", [g.score for g in groundednesses])  # [2, 0, 0]
     # Print timings
-    print(f"\nTime to load model: {t1 - t0:.2f}s") # ~15s
-    print(f"Time to evaluate: {t2 - t1:.2f}s") # ~4s
-    
+    print(f"\nTime to load model: {t1 - t0:.2f}s")  # ~15s
+    print(f"Time to evaluate: {t2 - t1:.2f}s")  # ~4s
+
     answer = "Based on the context provided, the Oxygen Pro 61's keyboard can be shifted 4 octaves down or 5 octaves up."
     answer_relevance = evaluator.answer_relevance(query=query, answer=answer)
     context_relevances = evaluator.context_relevance(query=query, contexts=contexts)
     groundednesses = evaluator.groundedness(answer=answer, contexts=contexts)
     t2 = monotonic()
-    print(f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}") # 1
-    print("Context relevances ", [cr.score for cr in context_relevances]) # [5, 1, 0]
-    print("Groundedness: ", [g.score for g in groundednesses]) # [0, 2, 0]
+    print(
+        f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}"
+    )  # 1
+    print("Context relevances ", [cr.score for cr in context_relevances])  # [5, 1, 0]
+    print("Groundedness: ", [g.score for g in groundednesses])  # [0, 2, 0]
