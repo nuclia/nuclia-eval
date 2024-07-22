@@ -23,7 +23,7 @@ log_cli=true
 
 [project]
 name = "nuclia_eval"
-version = "0.0.1"
+version = "1.0.0"
 authors = [
     { name="Carmen Iniesta", email="carmen@nuclia.com" },
     { name="Ramon Navarro", email="ramon@nuclia.com" },
@@ -54,5 +54,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nuclia/nuclia-eval"
-Issues = "https://github.com/nuclia/nuclia-eval/issues"
+homepage = "https://nuclia.com"
+repository = "https://github.com/nuclia/nuclia-eval"
+changelog = "https://github.com/nuclia/nuclia-eval/blob/main/CHANGELOG.md"
+issues = "https://github.com/nuclia/nuclia-eval/issues"

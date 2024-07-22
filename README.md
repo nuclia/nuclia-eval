@@ -25,11 +25,17 @@ Its evaluation follows the RAG triad as proposed by [TruLens](https://www.trulen
 In summary, the metrics **nuclia-eval** provides for a RAG Experience involving a **question** an **answer** and N pieces of **context** are:
 
 * **Answer Relevance**: Answer relevance refers to the directness and appropriateness of the response in addressing the specific question asked, providing accurate, complete, and contextually suitable information.
-    * **score**: A score between 0 and 5 indicating the relevance of the answer to the question.
+    * **score**: A number between 0 and 5 indicating the score of the relevance of the answer to the question.
     * **reason**: A string explaining the reason for the score.
 * For each of the N pieces of context:
     * **Context Relevance Score**: The context relevance is the relevance of the **context** to the **question**, on a scale of 0 to 5.
     * **Groudedness Score**: Groundedness is defined as the degree of information overlap to which the **answer** contains information that is substantially similar or identical to that in the **context** piece. The score is between 0 and 5.
+
+## Installation
+
+```bash
+pip install nuclia-eval
+```
 
 ## Available Models
 
