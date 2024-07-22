@@ -42,7 +42,8 @@ jobs:
               token: ${{ secrets.GITHUB_TOKEN }}
               thresholdAll: 0.9
         - name: Update and push coverage badge
-          #if: github.ref == 'refs/heads/main'
+        # Only update the badge on the main branch
+          if: github.ref == 'refs/heads/main'
           run: |
             pip install genbadge[coverage]
             genbadge coverage -i coverage.xml

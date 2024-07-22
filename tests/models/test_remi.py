@@ -11,100 +11,6 @@ from nuclia_eval.settings import Settings
 
 MANUAL_TEST = os.getenv("MANUAL_TEST", False)
 
-
-@pytest.mark.skipif(
-    not MANUAL_TEST,
-    reason="This test requires a GPU and the downloaded models and is skipped by default.",
-)
-def test_REMi_evaluator():
-    # Create an instance of the REMiEvaluator class
-    t0 = monotonic()
-    evaluator = REMiEvaluator()
-    t1 = monotonic()
-    data_path = "/home/learning/oni/llms/rag_metrics_llm/data/miniset_results.json"
-    with open(data_path) as f:
-        data = json.load(f)
-    answer_relevance_MAES = []
-    groundedness_MAES = []
-    context_relevance_MAES = []
-    version = "v0.3"
-    for d in data:
-        answ_rel = evaluator.answer_relevance(d["question"], d["answer"])
-        ctx_rel_responses = evaluator.context_relevance(d["question"], d["contexts"])
-        groundedness_responses = evaluator.groundedness(d["answer"], d["contexts"])
-
-        d["answer_relevance_score_" + version] = answ_rel.score
-        d["groundedness_scores_" + version] = [
-            ctx_rel_grd.score for ctx_rel_grd in groundedness_responses
-        ]
-        d["context_relevance_scores_" + version] = [
-            ctx_rel_grd.score for ctx_rel_grd in ctx_rel_responses
-        ]
-
-        d["answer_relevance_MAE_" + version] = abs(
-            d["answer_relevance_score_" + version] - d["answer_relevance_score"]
-        )
-
-        d["groundedness_MAE_" + version] = sum(
-            abs(desired - generated)
-            for generated, desired in zip(
-                d["groundedness_scores_" + version], d["groundedness_scores"]
-            )
-        )
-        d["groundedness_MAE_" + version] /= len(d["groundedness_scores"])
-
-        d["context_relevance_MAE_" + version] = sum(
-            abs(desired - generated)
-            for generated, desired in zip(
-                d["context_relevance_scores_" + version], d["context_relevance_scores"]
-            )
-        )
-        d["context_relevance_MAE_" + version] /= len(d["context_relevance_scores"])
-
-        answer_relevance_MAES.append(d["answer_relevance_MAE_" + version])
-        groundedness_MAES.append(d["groundedness_MAE_" + version])
-        context_relevance_MAES.append(d["context_relevance_MAE_" + version])
-
-    print(
-        f"Answer Relevance MAE: {sum(answer_relevance_MAES) / len(answer_relevance_MAES)}"
-    )
-    print(f"Groundedness MAE: {sum(groundedness_MAES) / len(groundedness_MAES)}")
-    print(
-        f"Context Relevance MAE: {sum(context_relevance_MAES) / len(context_relevance_MAES)}"
-    )
-
-    # Save the results
-    with open(
-        "/home/learning/oni/llms/rag_metrics_llm/data/miniset_results.json", "w"
-    ) as f:
-        json.dump(data, f)
-
-    import pdb
-
-    pdb.set_trace()
-
-    """query = "What is the Hubble Space Telescope?"
-    contexts = [
-        "The Hubble Space Telescope is a space telescope that was launched into low Earth orbit in 1990 and remains in operation.",
-        "In the solar system, the planets and their moons, comets, asteroids, and meteoroids are all held in orbit by the Sun's gravity.",
-        "The size of the elements in the solar system ranges from the Sun, which is the largest, to tiny grains of rock in the asteroid belt.",
-        "A microscope is an instrument used to see objects that are too small to be seen by the naked eye. It is used in many scientific fields and is also used in the study of cells and bacteria.",
-        "Edwin Hubble was an American astronomer who played a crucial role in establishing the field of extragalactic astronomy and is generally regarded as one of the most important observational cosmologists of the 20th century.",
-        "The space bar is a key on a keyboard that is used to insert a space between words or other characters. Studies show that the space bar is one of the most frequently used keys on a keyboard.",
-    ]
-    answer = "The Hubble Space Telescope (HST) is a space-based observatory that was launched into low Earth orbit by the Space Shuttle Discovery on April 24, 1990. Named after the astronomer Edwin Hubble, it is a project of international cooperation between NASA and the European Space Agency (ESA). The Hubble Space Telescope has made numerous significant contributions to astronomy and cosmology, thanks to its ability to capture high-resolution images and conduct observations without the distortion caused by the Earth's atmosphere."
-    out = evaluator.evaluate_rag(query=query, answer=answer, contexts=contexts)"""
-    t2 = monotonic()
-    # Print timings
-    print(f"Time to load model: {t1 - t0:.2f}s")
-    print(f"Time to evaluate: {t2 - t1:.2f}s")
-
-    import pdb
-
-    pdb.set_trace()
-    # assert out.answer_relevance == 1.0
-
-
 @patch("nuclia_eval.models.remi.generate")
 @patch("nuclia_eval.models.remi.snapshot_download")
 @patch("nuclia_eval.models.remi.load_lora_low_mem")
@@ -220,3 +126,51 @@ def test_REMi_evaluator_mock(
     ]
     with pytest.raises(InvalidToolCallException):
         evaluator.evaluate_rag("query", "answer", ["context1", "context2"])
+
+@pytest.mark.skipif(
+    not MANUAL_TEST,
+    reason="This test requires a GPU and the downloaded models and is skipped by default.",
+)
+def test_REMi_evaluator():
+    # Create an instance of the REMiEvaluator class
+    t0 = monotonic()
+    evaluator = REMiEvaluator()
+    t1 = monotonic()
+
+    query = "By how many Octaves can I shift my OXYGEN PRO 49 keyboard?"
+    contexts = [
+        """\
+* Oxygen Pro 49's keyboard can be shifted 3 octaves down or 4 octaves up.
+* Oxygen Pro 61's keyboard can be shifted 3 octaves down or 3 octaves up.
+
+To change the transposition of the keyboard, press and hold Shift, and then use the Key Octave –/+ buttons to lower or raise the keybed by one one, respectively.
+The display will temporarily show TRANS and the current transposition (-12 to 12).""",
+        """\
+To change the octave of the keyboard, use the Key Octave –/+ buttons to lower or raise the octave, respectively
+The display will temporarily show OCT and the current octave shift.\n\nOxygen Pro 25's keyboard can be shifted 4 octaves down or 5 octaves up""",
+        """\
+If your DAW does not automatically configure your Oxygen Pro series keyboard, please follow the setup steps listed in the Oxygen Pro DAW Setup Guides.
+To set the keyboard to operate in Preset Mode, press the DAW/Preset Button (on the Oxygen Pro 25) or Preset Button (on the Oxygen Pro 49 and 61).
+On the Oxygen Pro 25 the DAW/Preset button LED will be off to show that Preset Mode is selected.
+On the Oxygen Pro 49 and 61 the Preset button LED will be lit to show that Preset Mode is selected.""",
+    ]
+    answer = "Based on the context provided, the Oxygen Pro 49's keyboard can be shifted 3 octaves down or 4 octaves up."
+
+    result = evaluator.evaluate_rag(query=query, answer=answer, contexts=contexts)
+    answer_relevance, context_relevances, groundednesses = result
+    t2 = monotonic()
+    print(f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}") # 4
+    print("Context relevances ", [cr.score for cr in context_relevances]) # [5, 1, 0]
+    print("Groundedness: ", [g.score for g in groundednesses]) # [2, 0, 0]
+    # Print timings
+    print(f"\nTime to load model: {t1 - t0:.2f}s") # ~15s
+    print(f"Time to evaluate: {t2 - t1:.2f}s") # ~4s
+    
+    answer = "Based on the context provided, the Oxygen Pro 61's keyboard can be shifted 4 octaves down or 5 octaves up."
+    answer_relevance = evaluator.answer_relevance(query=query, answer=answer)
+    context_relevances = evaluator.context_relevance(query=query, contexts=contexts)
+    groundednesses = evaluator.groundedness(answer=answer, contexts=contexts)
+    t2 = monotonic()
+    print(f"\nAnswer relevance: {answer_relevance.score}, {answer_relevance.reason}") # 1
+    print("Context relevances ", [cr.score for cr in context_relevances]) # [5, 1, 0]
+    print("Groundedness: ", [g.score for g in groundednesses]) # [0, 2, 0]

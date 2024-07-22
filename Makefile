@@ -17,4 +17,4 @@ lint:
 	mypy .
 
 test:
-	pytest -vx . --tb=native
+	pytest -svx . --tb=native
