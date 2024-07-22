@@ -82,7 +82,7 @@ print([g.score for g in groundednesses]) # [2, 0, 0]
 ```
 ### Granularity
 
-The **REMi** evaluator provides a fine-grained evaluation and strict of the RAG triad. For instance if we slightly modify the answer to the query:
+The **REMi** evaluator provides a fine-grained and strict evaluation of the RAG triad. For instance if we slightly modify the answer to the query:
 
 ```diff
 - answer = "Based on the context provided, The Oxygen Pro 49's keyboard can be shifted 3 octaves down or 4 octaves up."
