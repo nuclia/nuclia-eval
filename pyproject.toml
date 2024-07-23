@@ -23,7 +23,7 @@ log_cli=true
 
 [project]
 name = "nuclia_eval"
-version = "1.0.1"
+version = "1.0.2.dev0"
 authors = [
     { name="Carles Onielfa", email="carlesop@nuclia.com" },
     { name="Carmen Iniesta", email="carmen@nuclia.com" },
