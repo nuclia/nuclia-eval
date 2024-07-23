@@ -3,7 +3,7 @@
 ## 1.0.1 (unreleased)
 
 
-- Nothing changed yet.
+- Update project metadata
 
 
 ## 1.0.0 (2024-07-23)

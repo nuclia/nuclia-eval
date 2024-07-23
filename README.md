@@ -13,16 +13,16 @@
 
 # nuclia-eval: Evaluate your RAG with nuclia's models
 <p align="center">
-  <img src="assets/Nuclia_vertical.png" width="350" title="nuclia logo" alt="nuclia, the all-in-one RAG as a service platform.">
+  <img src="https://github.com/nuclia/nuclia-eval/blob/main/assets/Nuclia_vertical.png?raw=true" width="350" title="nuclia logo" alt="nuclia, the all-in-one RAG as a service platform.">
 </p>
 
 Library for evaluating RAG using **nuclia**'s models
 
 Its evaluation follows the RAG triad as proposed by [TruLens](https://www.trulens.org/trulens_eval/getting_started/core_concepts/rag_triad/):
 
-![rag triad](assets/RAG_Triad.jpg)
+![rag triad](https://github.com/nuclia/nuclia-eval/blob/main/assets/RAG_Triad.jpg?raw=true)
 
-In summary, the metrics **nuclia-eval** provides for a RAG Experience involving a **question** an **answer** and N pieces of **context** are:
+In summary, the metrics **nuclia-eval** provides for a RAG Experience involving a **question**, an **answer** and N pieces of **context** are:
 
 * **Answer Relevance**: Answer relevance refers to the directness and appropriateness of the response in addressing the specific question asked, providing accurate, complete, and contextually suitable information.
     * **score**: A number between 0 and 5 indicating the score of the relevance of the answer to the question.
