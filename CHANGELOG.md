@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2 (unreleased)
+## 1.0.2 (2024-07-23)
 
 
 - Easier import of the REMi evaluator
