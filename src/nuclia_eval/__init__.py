@@ -1,4 +1,4 @@
-"""nuclia-eval is a library that simplifies evaluating the RAG experience using nuclia's models."""
+"""nuclia-eval is a library that simplifies evaluating the RAG experience using nuclia's models. """
 
 import logging
 
