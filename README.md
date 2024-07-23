@@ -29,7 +29,7 @@ In summary, the metrics **nuclia-eval** provides for a RAG Experience involving 
     * **reason**: A string explaining the reason for the score.
 * For each of the N pieces of context:
     * **Context Relevance Score**: The context relevance is the relevance of the **context** to the **question**, on a scale of 0 to 5.
-    * **Groudedness Score**: Groundedness is defined as the degree of information overlap to which the **answer** contains information that is substantially similar or identical to that in the **context** piece. The score is between 0 and 5.
+    * **Groundedness Score**: Groundedness is defined as the degree of information overlap to which the **answer** contains information that is substantially similar or identical to that in the **context** piece. The score is between 0 and 5.
 
 ## Installation
 
