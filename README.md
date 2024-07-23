@@ -44,7 +44,7 @@ pip install nuclia-eval
 [REMi-v0](https://huggingface.co/nuclia/REMi-v0) (RAG Evaluation MetrIcs) is a LoRa adapter for the 
 [Mistral-7B-Instruct-v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) model. 
 
-It has been finetuned by the team at [**nuclia**](nuclia.com) to evaluate the quality of all parts of the RAG experience.
+It has been finetuned by the team at [**nuclia**](https://nuclia.com) to evaluate the quality of all parts of the RAG experience.
 
 ## Usage
 
