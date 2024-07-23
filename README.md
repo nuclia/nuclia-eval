@@ -51,7 +51,7 @@ It has been finetuned by the team at [**nuclia**](nuclia.com) to evaluate the qu
 ```python
 from nuclia_eval import REMi
 
-evaluator = REMiEvaluator()
+evaluator = REMi()
 
 query = "By how many Octaves can I shift my OXYGEN PRO 49 keyboard?"
 
@@ -63,12 +63,12 @@ To change the transposition of the keyboard, press and hold Shift, and then use 
 The display will temporarily show TRANS and the current transposition (-12 to 12)."""
 context2 ="""\
 To change the octave of the keyboard, use the Key Octave –/+ buttons to lower or raise the octave, respectively
-The display will temporarily show OCT and the current octave shift.\n\nOxygen Pro 25's keyboard can be shifted 4 octaves down or 5 octaves up""",
+The display will temporarily show OCT and the current octave shift.\n\nOxygen Pro 25's keyboard can be shifted 4 octaves down or 5 octaves up"""
 context3 = """\
 If your DAW does not automatically configure your Oxygen Pro series keyboard, please follow the setup steps listed in the Oxygen Pro DAW Setup Guides.
 To set the keyboard to operate in Preset Mode, press the DAW/Preset Button (on the Oxygen Pro 25) or Preset Button (on the Oxygen Pro 49 and 61).
 On the Oxygen Pro 25 the DAW/Preset button LED will be off to show that Preset Mode is selected.
-On the Oxygen Pro 49 and 61 the Preset button LED will be lit to show that Preset Mode is selected.""",
+On the Oxygen Pro 49 and 61 the Preset button LED will be lit to show that Preset Mode is selected."""
 
 answer = "Based on the context provided, The Oxygen Pro 49's keyboard can be shifted 3 octaves down or 4 octaves up."
 
@@ -76,7 +76,7 @@ result = evaluator.evaluate_rag(query=query, answer=answer, contexts=[context1, 
 answer_relevance, context_relevances, groundednesses = result
 
 print(f"{answer_relevance.score}, {answer_relevance.reason}")
-# 4, The response is relevant to the entire query and answers it completely, but it could be more specific about the limitations of the keyboard.
+# 5, The response directly answers the query by specifying the range of octave shifts for the Oxygen Pro 49 keyboard.
 print([cr.score for cr in context_relevances]) # [5, 1, 0]
 print([g.score for g in groundednesses]) # [2, 0, 0]
 ```

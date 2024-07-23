@@ -4,8 +4,8 @@ from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 
+from nuclia_eval import REMi
 from nuclia_eval.exceptions import InvalidToolCallException
-from nuclia_eval.models.remi import REMiEvaluator
 from nuclia_eval.settings import Settings
 
 MANUAL_TEST = os.getenv("MANUAL_TEST", False)
@@ -36,7 +36,7 @@ def test_REMi_evaluator_mock(
         nuclia_model_cache="my_cache/",
     )
     # Run code
-    evaluator = REMiEvaluator(settings=settings, device="my_device")
+    evaluator = REMi(settings=settings, device="my_device")
     # Check evaluator variables are properly set
     assert evaluator.settings == settings
     # Check that the paths start with the cache path
@@ -69,7 +69,7 @@ def test_REMi_evaluator_mock(
     fake_model.to.assert_called_once_with("my_device")
 
     # Now load one with default settings
-    evaluator = REMiEvaluator()
+    evaluator = REMi()
 
     # Configure mocks for a rag_evaluation call
     tokenizer_mock.encode_chat_completion.return_value = [1, 2, 3]
@@ -95,7 +95,7 @@ def test_REMi_evaluator_mock(
 
     # Create another evaluator, so that we can check that the model is not downloaded again
     with patch("pathlib.Path.exists", return_value=True):
-        evaluator = REMiEvaluator(settings=settings, device="my_device")
+        evaluator = REMi(settings=settings, device="my_device")
     # Check that the download calls were not made again
     # assert len(snapshot_download_mock.mock_calls) == 2
 
@@ -135,7 +135,7 @@ def test_REMi_evaluator_mock(
 def test_REMi_evaluator():
     # Create an instance of the REMiEvaluator class
     t0 = monotonic()
-    evaluator = REMiEvaluator()
+    evaluator = REMi()
     t1 = monotonic()
 
     query = "By how many Octaves can I shift my OXYGEN PRO 49 keyboard?"

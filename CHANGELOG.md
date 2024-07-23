@@ -3,7 +3,8 @@
 ## 1.0.2 (unreleased)
 
 
-- Nothing changed yet.
+- Easier import of the REMi evaluator
+- Improve example in README
 
 
 ## 1.0.1 (2024-07-23)
