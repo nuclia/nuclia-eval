@@ -18,3 +18,7 @@ lint:
 
 test:
 	pytest -svx . --tb=native
+
+release:
+	pip install zest.releaser
+	fullrelease
