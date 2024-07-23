@@ -53,6 +53,12 @@ jobs:
             mkdir -p gh-pages/badges
             mv coverage-badge.svg gh-pages/badges/coverage.svg
             cd gh-pages
-            git add badges/coverage.svg
-            git commit -m 'Update coverage badge'
-            git push origin gh-pages
+            git add badges/coverage.svg    
+            # Check if there are any changes
+            if git diff --staged --quiet; then
+              echo "No changes in coverage"
+            else
+              git commit -m 'Update coverage badge'
+              git push origin gh-pages
+            fi
+
