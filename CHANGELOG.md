@@ -3,7 +3,7 @@
 ## 1.0.3 (unreleased)
 
 
-- Fix typo in README
+- Update README
 
 
 ## 1.0.2 (2024-07-23)

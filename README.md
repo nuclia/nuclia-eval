@@ -33,9 +33,26 @@ In summary, the metrics **nuclia-eval** provides for a RAG Experience involving 
 
 ## Installation
 
+**Installing the package**
+
 ```bash
 pip install nuclia-eval
 ```
+
+**Requirements for downloading the models**
+
+To download the models, you must have a Hugging Face account and be logged in. You can create an account [here](https://huggingface.co/join). You also need to authenticate your session with the Hugging Face API by running `huggingface-cli login` or any other method described [here](https://huggingface.co/docs/hub/models-gated#download-files).
+
+Then, you need to have access to both the base model and the adapter model, you can easily request access to each model by clicking the button on the model's page (once logged in). More information [here](https://huggingface.co/docs/hub/models-gated#access-gated-models-as-a-user).
+
+For example, for REMi-v0, you need access to the [Mistral-7B-Instruct-v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) base model and the [REMi-v0](https://huggingface.co/nuclia/REMi-v0) adapter model.
+
+If this authentication and authorization process is not completed, you will see a message like this when trying to instantiate an evaluator for the first time:
+
+```
+Access to model __model_name__ is restricted. You must be authenticated to access it.
+```
+
 
 ## Available Models
 
