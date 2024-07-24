@@ -33,6 +33,8 @@ In summary, the metrics **nuclia-eval** provides for a RAG Experience involving 
 
 ## Installation
 
+nuclia-eval is only supported on Linux-based systems.
+
 **Installing the package**
 
 ```bash
@@ -134,6 +136,25 @@ answer_relevance = evaluator.answer_relevance(query=query, answer=answer)
 context_relevances = evaluator.context_relevance(query=query, contexts=[context1, context2, context3])
 groundednesses = evaluator.groundedness(answer=answer, contexts=[context1, context2, context3])
 ...
+```
+
+### Specifying the model download location
+
+By default, the models are downloaded to the `~/.nuclia-model-cache/` directory. You can specify a different location in two ways:
+
+1. By setting the `NUCLIA_MODEL_CACHE` environment variable to the desired location.
+2. By overriding the default settings when instantiating the evaluator:
+
+```python
+from nuclia_eval import REMi
+from nuclia_eval.settings import Settings
+
+# Create custom settings
+settings = Settings(
+  nuclia_model_cache="my_cache/",
+)
+# Instantiate the evaluator
+evaluator = REMi(settings=settings)
 ```
 
 ## Feedback and Community
