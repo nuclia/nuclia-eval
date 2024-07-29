@@ -55,7 +55,6 @@ If this authentication and authorization process is not completed, you will see 
 Access to model __model_name__ is restricted. You must be authenticated to access it.
 ```
 
-
 ## Available Models
 
 ### REMi-v0
@@ -64,6 +63,8 @@ Access to model __model_name__ is restricted. You must be authenticated to acces
 [Mistral-7B-Instruct-v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) model. 
 
 It has been finetuned by the team at [**nuclia**](https://nuclia.com) to evaluate the quality of all parts of the RAG experience.
+
+> **Note**: The REMi-v0 model requires a GPU with at least 24GB of memory.
 
 ## Usage
 
