@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.3 (unreleased)
+## 1.0.3 (2024-07-31)
 
 
 - Update README
