@@ -25,13 +25,10 @@ def load_lora_low_mem(
     assert all("lora" in key for key in lora_state_dict.keys())
 
     state_dict = model.state_dict()
-    # Move this state dict to cpu
-    state_dict = {k: v.to("cpu") for k, v in state_dict.items()}
 
     if model.args.lora is None:
         # move tensors to device
         lora_state_dict = {k: v.to(model.device) for k, v in lora_state_dict.items()}
-        # replace every nn.Linear with a LoRALinear with 'meta' device except the output layer
         named_modules = dict(model.named_modules())
         for name, module in named_modules.items():
             if isinstance(module, nn.Linear) and name != "output":
@@ -40,13 +37,12 @@ def load_lora_low_mem(
                     weight = (
                         module.weight
                         + (
-                            lora_state_dict[name + ".lora_B.weight"].to(model.device)
-                            @ lora_state_dict[name + ".lora_A.weight"].to(model.device)
+                            lora_state_dict[name + ".lora_B.weight"]
+                            @ lora_state_dict[name + ".lora_A.weight"]
                         )
                         * scaling
                     )
-
-                    state_dict[name + ".weight"] = weight.to("cpu")
+                    state_dict[name + ".weight"].copy_(weight)
     else:
         for k, v in lora_state_dict.items():
             state_dict.update(lora_state_dict)
@@ -54,12 +50,12 @@ def load_lora_low_mem(
             layer_id = k.split(".")[1]
             if layer_id in model.layers:
                 state_dict[k] = v
-    # Move model to cpu
-    device = model.device
-    model = model.to("cpu")
+
     model.load_state_dict(state_dict, strict=True)
-    # Move model back to desired device
-    model = model.to(device)
+
+    # Clear any remaining variables to free up memory
+    del lora_state_dict
+    del state_dict
 
 
 def inherit_docstrings(cls):  # pragma: no cover
