@@ -4,6 +4,7 @@
 
 
 - Update README
+- Reduced RAM usage when merging adapter model
 
 
 ## 1.0.2 (2024-07-23)
